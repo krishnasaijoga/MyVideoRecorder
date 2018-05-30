@@ -29,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
     VideoView mVideoView;
     ImageView iv_disp;
 
+
     private static String[] PERMISSIONS_STORAGE = {
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE
