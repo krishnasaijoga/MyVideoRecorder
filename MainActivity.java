@@ -3,6 +3,7 @@ package com.example.myvideorecorder;
 import android.Manifest;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Bundle;
@@ -54,7 +55,13 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 
-        Uri uri = Uri.parse("android.resource://"+getPackageName()+"/raw/fight");
+        deFrameVideo("android.resource://"+getPackageName()+"/raw/fight");
+
+    }
+
+    private void deFrameVideo(String path)
+    {
+        Uri uri = Uri.parse(path);
         //Log.d("path = ",uri+"");
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         String video_duration="";
@@ -68,6 +75,8 @@ public class MainActivity extends AppCompatActivity {
             Log.d("Status","NOPE");
             iae.printStackTrace();
         }
+
+
         Bitmap bmpOriginal = retriever.getFrameAtTime(0);
         int bmpVideoHeight = bmpOriginal.getHeight();
         int bmpVideoWidth = bmpOriginal.getWidth();
@@ -78,19 +87,21 @@ public class MainActivity extends AppCompatActivity {
         int scaleHeight = (int) ( (float) bmpVideoHeight * factor );
         int max = (int) Long.parseLong(video_duration);
 
-        for(int i=0;i<max;i++) {
+        for(int i=0;i<max;i+=1000) {
 
             bmpOriginal = retriever.getFrameAtTime(i*1000,MediaMetadataRetriever.OPTION_CLOSEST);
-            bmpVideoHeight = bmpOriginal.getHeight();
-            bmpVideoWidth = bmpOriginal.getWidth();
+            bmpVideoHeight = (bmpOriginal==null)?-1:bmpOriginal.getHeight();
+            bmpVideoWidth = (bmpOriginal==null)?-1:bmpOriginal.getWidth();
             int byteCount = bmpVideoHeight*bmpVideoWidth*4;
             ByteBuffer tempByteBuffer = ByteBuffer.allocate(byteCount);
+            if (bmpOriginal == null)
+                continue;
             bmpOriginal.copyPixelsToBuffer(tempByteBuffer);
             byte[] tempByteArray = tempByteBuffer.array();
 
             if(!Arrays.equals(tempByteArray,lastSavedByteArray)) {
 
-                File outputfile = new File("/sdcard/android/", "fight_"+i+".png");
+                File outputfile = new File("/sdcard/android/", "fight_"+i+".jpeg");
                 OutputStream out = null;
                 try {
                     out = new FileOutputStream(outputfile);
@@ -115,9 +126,8 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        iv_disp.setImageBitmap(bmpOriginal);
+        //iv_disp.setImageBitmap(bmpOriginal);
         retriever.release();
-
     }
 
     private void dispatchTakeVideoIntent() {
@@ -127,8 +137,16 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void combineFramesPlay(View view) {
+        String filePath="fight_0.jpeg";
+        File inputFile = new File("/sdcard/android/",filePath);
+        Bitmap bitmap = BitmapFactory.decodeFile("/sdcard/android/fight_0.jpeg");
+        iv_disp.setImageBitmap(bitmap);
+//        SequenceEncoder
+    }
 
-    @Override
+
+    /*@Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 //        super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_VIDEO_CAPTURE && resultCode == RESULT_OK) {
@@ -159,5 +177,5 @@ public class MainActivity extends AppCompatActivity {
             });
             Log.d("VIDEO PLAYING STATUS",""+mVideoView.isPlaying());
         }
-    }
+    }*/
 }
